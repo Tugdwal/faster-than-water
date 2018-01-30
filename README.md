@@ -17,7 +17,7 @@ Dans notre version, le joueur incarnera un navire partant d’un port et son but
 * Navire et un équipage
 * Des objets et équipements permettant d’améliorer son navire et son équipage
 * Quêtes
-    *Transport de marchandises (easy - medium - hard)
+    * Transport de marchandises de différentes valeurs (Easy - Medium - Hard)
 * Carte du monde - Graphe
     * Sommets
         * Multiples destinations
