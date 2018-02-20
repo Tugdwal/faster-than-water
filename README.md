@@ -11,9 +11,9 @@ Faster Than Water est un jeu. Nous souhaitons nous inspirer des Rogue Like déj�
 
 Dans notre version, le joueur incarnera un navire partant d’un port et son but sera de rejoindre une deuxième destination prédéfinie. Pour se faire, le joueur devra choisir son chemin parmis ceux qui lui sont fournis. Il pourra ainsi trouver sur son chemin des pirates, qui chercheront à mettre à sac son expédition, mais aussi d’autres événements déterminés aléatoirements. Ces événements pourront donner des bonus, à faire valoir lors des combats, ou emmener le joueur vers des dangers plus grand encore.
 
-## Gameplay (TODO)
+## Gameplay
 
-Élément de gameplay :
+Éléments de gameplay :
 * Navire et un équipage
 * Des objets et équipements permettant d’améliorer son navire et son équipage
 * Quêtes
@@ -27,3 +27,15 @@ Dans notre version, le joueur incarnera un navire partant d’un port et son but
             * Épaves
     * Arêtes
         * Multiples trajets possibles
+* Système de combat
+    * Tour par tour
+    * Points d’action à répartir
+        * Déplacement
+            * Vitesse
+            * Direction
+        * Tirs de canons
+        * Abordage
+    * Fin du combat
+        * Victoire (Élimination ou abordage réussi)
+        * Fuite (Traversée de la zone de combat)
+        * Défaite (Bateau détruit)
