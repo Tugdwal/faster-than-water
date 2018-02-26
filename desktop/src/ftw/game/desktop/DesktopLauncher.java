@@ -1,8 +1,9 @@
-package com.mygdx.game.desktop;
+package ftw.game.desktop;
 
 import com.badlogic.gdx.backends.lwjgl.LwjglApplication;
 import com.badlogic.gdx.backends.lwjgl.LwjglApplicationConfiguration;
-import com.mygdx.game.FTWGame;
+
+import ftw.game.FTWGame;
 
 public class DesktopLauncher {
 	public static void main (String[] arg) {

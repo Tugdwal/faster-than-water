@@ -1,4 +1,4 @@
-package com.mygdx.game;
+package ftw.game;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
