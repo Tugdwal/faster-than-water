@@ -48,6 +48,11 @@ public class Player
         m_quests.add(quest);
         m_ship.load(quest.cargo());
     }
+    
+    public Ship ship() 
+    { 
+    	return m_ship; 
+    }
 
     @Override
     public String toString()

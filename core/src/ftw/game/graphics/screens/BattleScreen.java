@@ -49,7 +49,7 @@ public class BattleScreen extends GameScreen {
     {
         super(game, batch, hud_viewport, game_viewport);
         
-        m_PlayerShip = new Ship ("Mon_Ship", new CrewMember("Captain"), 100);
+        m_PlayerShip = game().player().ship();
 
         Skin skin = game.assets().get(Assets.SKIN_DEFAULT);
         m_background_color = skin.getColor("background-reversed");
@@ -259,11 +259,12 @@ public class BattleScreen extends GameScreen {
             m_player = player;
             m_Ship = ship;
 
-            setScale(0.10f);
+            setSize(getWidth() * 0.1f, getHeight() * 0.1f);
+            setOrigin (getWidth()/2, getHeight()/2);
             
             m_Position = new Vector2 ();
-            m_Position.x = getWidth() / 2;
-            m_Position.y = getHeight() / 2;
+            m_Position.x = stage().getWidth() / 2;
+            m_Position.y = stage().getHeight() / 2;
             m_Direction = new Vector2 (1f, 0f);
             update();
         }
@@ -274,7 +275,8 @@ public class BattleScreen extends GameScreen {
             m_player = player;
             m_Ship = ship;
 
-            setScale(0.10f);
+            setSize(getWidth() * 0.1f, getHeight() * 0.1f);
+            setOrigin (getWidth()/2, getHeight()/2);
             
             m_Position = position;
             m_Direction = direction;
@@ -314,7 +316,22 @@ public class BattleScreen extends GameScreen {
 
         public void update()
         {
+        	checkShipPosition ();        	
             setPosition(m_Position.x - getWidth() * getScaleX() / 2, m_Position.y - getHeight() * getScaleY() / 2);
+        }
+        
+        public void checkShipPosition ()
+        {
+        	float sizeShip = getWidth() * getScaleX() / 2;
+        	if (m_Position.x < 0 + sizeShip)
+        		m_Position.x = 0 + sizeShip;
+        	else if (m_Position.x >  stage().getWidth() - sizeShip)
+        		m_Position.x =  stage().getWidth() - sizeShip;
+        	
+        	if (m_Position.y < 0 + sizeShip)
+        		m_Position.y = 0 + sizeShip;
+        	else if (m_Position.y > stage().getHeight() - sizeShip)
+        		m_Position.y = stage().getHeight() - sizeShip;
         }
     }
 }
