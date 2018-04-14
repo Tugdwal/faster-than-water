@@ -63,12 +63,14 @@ public class BattleScreen extends GameScreen {
 
         HUDInit (table, skin, style);
         
-        //stage().addActor(m_ship);
+        m_ship = new ShipImage(game.assets().get(Assets.TEXTURE_SHIP_SIDE), game.player(), m_PlayerShip);
+        stage().addActor(m_ship);
 
         update();
     }
     
-    private void HUDInit (Table table, Skin skin, TextButtonStyle style) {
+    private void HUDInit (Table table, Skin skin, TextButtonStyle style) 
+    {
         ActionButton button = new ActionButton ("Shoot", style);
         button.addListener(new ChangeListener()
         {
@@ -115,6 +117,7 @@ public class BattleScreen extends GameScreen {
             public void changed(ChangeEvent event, Actor actor)
             {
             	System.out.println("Left");
+            	m_ship.leftRotate();
             }
         });
         hud().addActor(button);
@@ -131,6 +134,7 @@ public class BattleScreen extends GameScreen {
             public void changed(ChangeEvent event, Actor actor)
             {
                 System.out.println("Forward");
+                m_ship.forwardMove();
             }
         });
         hud().addActor(button);
@@ -144,6 +148,7 @@ public class BattleScreen extends GameScreen {
             public void changed(ChangeEvent event, Actor actor)
             {
             	System.out.println("Backward");
+            	m_ship.backwardMove();
             }
         });
         hud().addActor(button);
@@ -159,6 +164,7 @@ public class BattleScreen extends GameScreen {
             public void changed(ChangeEvent event, Actor actor)
             {
             	System.out.println("Right");
+            	m_ship.rightRotate();
             }
         });
         hud().addActor(button);
@@ -240,25 +246,75 @@ public class BattleScreen extends GameScreen {
 
     private class ShipImage extends Image
     {
+    	static final int rotationAngle = 45;
+    	
         private Player m_player;
+        private Ship m_Ship;
+        private Vector2 m_Position;
+        private Vector2 m_Direction;
 
-        public ShipImage(Texture texture, Player player)
+        public ShipImage(Texture texture, Player player, Ship ship)
         {
             super(texture);
             m_player = player;
+            m_Ship = ship;
 
             setScale(0.10f);
+            
+            m_Position = new Vector2 ();
+            m_Position.x = getWidth() / 2;
+            m_Position.y = getHeight() / 2;
+            m_Direction = new Vector2 (1f, 0f);
             update();
         }
 
-        public void move()
+        public ShipImage(Texture texture, Player player, Ship ship, Vector2 position, Vector2 direction)
         {
+            super(texture);
+            m_player = player;
+            m_Ship = ship;
+
+            setScale(0.10f);
+            
+            m_Position = position;
+            m_Direction = direction;
             update();
+        }
+        
+        public void forwardMove() 
+        {
+        	m_Position.x += m_Direction.x*m_Ship.speed().value();
+        	m_Position.y += m_Direction.y*m_Ship.speed().value();
+        	update();
+        }
+
+        public void backwardMove()
+        {
+        	m_Position.x -= m_Direction.x*m_Ship.speed().value(); 
+        	m_Position.y -= m_Direction.y*m_Ship.speed().value();
+            update();
+        }
+
+        public void leftRotate()
+        {
+        	rotateBy(rotationAngle);
+        	m_Direction.x = (float)MathUtils.cosDeg(getRotation());
+        	m_Direction.y = (float)MathUtils.sinDeg(getRotation());
+        	update();
+        }
+        
+        public void rightRotate()
+        {
+        	rotateBy(-rotationAngle);
+        	m_Direction.x = (float)MathUtils.cosDeg(getRotation());
+        	m_Direction.y = (float)MathUtils.sinDeg(getRotation());
+        	System.out.println(String.valueOf(m_Direction.x) + " | " + String.valueOf(m_Direction.y));
+        	update();
         }
 
         public void update()
         {
-            setPosition(m_player.location().position().x - getWidth() * getScaleX() / 2, m_player.location().position().y - getHeight() * getScaleY() / 2);
+            setPosition(m_Position.x - getWidth() * getScaleX() / 2, m_Position.y - getHeight() * getScaleY() / 2);
         }
     }
 }
