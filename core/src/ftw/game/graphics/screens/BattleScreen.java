@@ -63,10 +63,6 @@ public class BattleScreen extends GameScreen {
 
         HUDInit (table, skin, style);
         
-        m_ship = new ShipImage(game.assets().get(Assets.TEXTURE_SHIP_SIDE), game.player(), m_PlayerShip);
-        stage().addActor(m_ship);
-
-        update();
     }
     
     private void HUDInit (Table table, Skin skin, TextButtonStyle style) 
@@ -182,6 +178,17 @@ public class BattleScreen extends GameScreen {
             }
         });
         table.add(back_button).padRight(20);;
+    }
+   
+    @Override
+    public void resume() {
+    	super.resume();
+    	
+    	stage().clear();
+        m_ship = new ShipImage(game().assets().get(Assets.TEXTURE_SHIP_SIDE), game().player(), m_PlayerShip);
+        stage().addActor(m_ship);
+
+        update();
     }
 
     @Override
