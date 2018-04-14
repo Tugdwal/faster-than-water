@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 import ftw.game.assets.Assets;
 import ftw.game.graphics.base.Screen;
+import ftw.game.graphics.screens.BattleScreen;
 import ftw.game.graphics.screens.LoadingScreen;
 import ftw.game.graphics.screens.MainMenuScreen;
 import ftw.game.graphics.screens.TestScreen;
@@ -140,6 +141,9 @@ public class FTWGame extends Game
                             break;
                         case WORLD:
                             m_loaded_screens.put(e, new WorldScreen(this, m_batch, m_hud_viewport, m_game_viewport, m_world));
+                            break;
+                        case BATTLE:
+                            m_loaded_screens.put(e, new BattleScreen(this, m_batch, m_hud_viewport, m_game_viewport));
                             break;
                         case TEST:
                             m_loaded_screens.put(e, new TestScreen(this, m_batch, m_hud_viewport));

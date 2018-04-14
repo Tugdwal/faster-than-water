@@ -25,9 +25,9 @@ public class Ship extends Entity
         super(name);
 
         m_stats.put(Stat.Type.Health, new Stat(Stat.Type.Health, 2000));
-        m_stats.put(Stat.Type.Health, new Stat(Stat.Type.Defense, 100));
-        m_stats.put(Stat.Type.Health, new Stat(Stat.Type.Speed, 100));
-        m_stats.put(Stat.Type.Health, new Stat(Stat.Type.Steering, 20));
+        m_stats.put(Stat.Type.Defense, new Stat(Stat.Type.Defense, 100));
+        m_stats.put(Stat.Type.Speed, new Stat(Stat.Type.Speed, 100));
+        m_stats.put(Stat.Type.Steering, new Stat(Stat.Type.Steering, 20));
 
         m_captain = captain;
         m_hold_size = hold_size;

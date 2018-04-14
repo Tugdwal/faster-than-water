@@ -27,6 +27,7 @@ import ftw.game.FTWGame;
 import ftw.game.Player;
 import ftw.game.assets.Assets;
 import ftw.game.graphics.base.GameScreen;
+import ftw.game.graphics.base.Screen;
 import ftw.game.world.Location;
 import ftw.game.world.Seaway;
 import ftw.game.world.World;
@@ -70,6 +71,7 @@ public class WorldScreen extends GameScreen
                 {
                     m_ship.move(button);
                     update();
+                    push(Screen.Event.BATTLE);
                 }
             });
 
