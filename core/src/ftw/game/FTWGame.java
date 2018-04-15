@@ -18,6 +18,7 @@ import ftw.game.assets.Assets;
 import ftw.game.graphics.base.Screen;
 import ftw.game.graphics.screens.LoadingScreen;
 import ftw.game.graphics.screens.MainMenuScreen;
+import ftw.game.graphics.screens.QuestScreen;
 import ftw.game.graphics.screens.TestScreen;
 import ftw.game.graphics.screens.WorldScreen;
 import ftw.game.item.Item;
@@ -139,7 +140,10 @@ public class FTWGame extends Game
                             m_loaded_screens.put(e, new MainMenuScreen(this, m_batch, m_hud_viewport));
                             break;
                         case WORLD:
-                            m_loaded_screens.put(e, new WorldScreen(this, m_batch, m_hud_viewport, m_game_viewport, m_world));
+                            m_loaded_screens.put(e, new WorldScreen(this, m_batch, m_hud_viewport, m_game_viewport));
+                            break;
+                        case QUEST:
+                            m_loaded_screens.put(e, new QuestScreen(this, m_batch, m_hud_viewport));
                             break;
                         case TEST:
                             m_loaded_screens.put(e, new TestScreen(this, m_batch, m_hud_viewport));

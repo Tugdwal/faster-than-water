@@ -10,7 +10,7 @@ public class Screen extends ScreenAdapter
 {
     public enum Event
     {
-        NONE, RESET, POP, PUSH, MAIN_MENU, WORLD, TEST
+        NONE, RESET, POP, PUSH, MAIN_MENU, WORLD, QUEST, TEST
     }
 
     private FTWGame m_game;
