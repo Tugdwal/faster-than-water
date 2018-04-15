@@ -11,9 +11,8 @@ public class Ship extends Entity
     private CrewMember m_captain;
     private ArrayList<CrewMember> m_crew;
 
+    private int m_cargo_space;
     private ArrayList<Cargo> m_cargo;
-
-    private int m_hold_size;
 
     {
         m_crew = new ArrayList<>();
@@ -30,7 +29,7 @@ public class Ship extends Entity
         m_stats.put(Stat.Type.Steering, new Stat(Stat.Type.Steering, 20));
 
         m_captain = captain;
-        m_hold_size = hold_size;
+        m_cargo_space = hold_size;
     }
 
     public Stat health()
@@ -117,9 +116,9 @@ public class Ship extends Entity
         return this;
     }
 
-    public int holdSize()
+    public int cargoSpace()
     {
-        return m_hold_size;
+        return m_cargo_space;
     }
 
     public int cargoSize()
@@ -132,9 +131,14 @@ public class Ship extends Entity
         return size;
     }
 
+    public int availableCargoSpace()
+    {
+        return m_cargo_space - cargoSize();
+    }
+
     public boolean loadable(Cargo cargo)
     {
-        return m_hold_size - cargoSize() - cargo.size() >= 0;
+        return availableCargoSpace() - cargo.size() >= 0;
     }
 
     public void load(Cargo cargo)

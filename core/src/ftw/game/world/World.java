@@ -21,8 +21,8 @@ public class World
 
         Location tortuga = new Location("Tortuga", 200, 50);
         Location singapore = new Location("Singapore", 1080, 50);
-        Location port_royal = new Location("Port Royal", 640, 670);
-        Location bermuda_triangle = new Location("Bermuda Triangle", 640, 360);
+        Location port_royal = new Location("Port Royal", 640, 600);
+        Location bermuda_triangle = new Location("Bermuda Triangle", 640, 300);
 
         m_starting_location = port_royal;
 
@@ -38,11 +38,16 @@ public class World
         m_seaways.add(new Seaway(tortuga, bermuda_triangle));
         m_seaways.add(new Seaway(singapore, bermuda_triangle));
         m_seaways.add(new Seaway(port_royal, bermuda_triangle));
+        m_seaways.add(new Seaway(port_royal, singapore));
 
         Quest q1 = new Quest(tortuga);
+        Quest q2 = new Quest(singapore);
+
         m_quests.add(q1);
+        m_quests.add(q2);
 
         port_royal.assign(q1);
+        port_royal.assign(q2);
     }
 
     public ArrayList<Location> harbors()

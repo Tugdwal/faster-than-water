@@ -6,7 +6,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
@@ -15,6 +14,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
@@ -24,52 +24,53 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import ftw.game.FTWGame;
-import ftw.game.Player;
 import ftw.game.assets.Assets;
+import ftw.game.graphics.base.DataButton;
 import ftw.game.graphics.base.GameScreen;
 import ftw.game.graphics.base.Screen;
 import ftw.game.world.Location;
 import ftw.game.world.Seaway;
-import ftw.game.world.World;
 
 public class WorldScreen extends GameScreen
 {
     Color m_background_color;
 
-    private World m_world;
-    private ArrayList<LocationButton> m_locations;
+    private Label m_location;
+    private DataButton<Location> m_current_location;
+    private ArrayList<DataButton<Location>> m_locations;
     private ArrayList<SeawaySprite> m_seaways;
-    private ShipImage m_ship;
+    private Image m_ship;
 
     {
         m_locations = new ArrayList<>();
         m_seaways = new ArrayList<>();
     }
 
-    public WorldScreen(FTWGame game, Batch batch, Viewport hud_viewport, Viewport game_viewport, World world)
+    public WorldScreen(FTWGame game, Batch batch, Viewport hud_viewport, Viewport game_viewport)
     {
         super(game, batch, hud_viewport, game_viewport);
 
-        m_world = world;
-
-        Skin skin = game.assets().get(Assets.SKIN_DEFAULT);
+        Skin skin = game().assets().get(Assets.SKIN_DEFAULT);
         m_background_color = skin.getColor("background-reversed");
         TextButtonStyle style = skin.get("default-reversed", TextButtonStyle.class);
         Sprite sprite = skin.getSprite("square");
 
-        Table table = new Table();
-        table.setFillParent(true);
-        table.left().top();
-        hud().addActor(table);
+        m_ship = new Image(game().assets().get(Assets.TEXTURE_SHIP_SIDE));
+        m_ship.setSize(80, 80);
+        stage().addActor(m_ship);
 
-        for (Location location : world.locations()) {
-            final LocationButton button = new LocationButton(location, style);
+        for (Location location : game().world().locations()) {
+            final DataButton<Location> button = new DataButton<>(location.name(), style, location);
             button.addListener(new ChangeListener()
             {
                 @Override
                 public void changed(ChangeEvent event, Actor actor)
                 {
-                    m_ship.move(button);
+                    m_current_location.setVisible(true);
+                    m_current_location = button;
+                    m_current_location.setVisible(false);
+                    game().player().move(m_current_location.data());
+                    m_location.setText(m_current_location.data().name());
                     update();
                     push(Screen.Event.BATTLE);
                 }
@@ -78,18 +79,23 @@ public class WorldScreen extends GameScreen
             m_locations.add(button);
             hud().addActor(button);
 
-            if (location == game.player().location()) {
-                m_ship = new ShipImage(game.assets().get(Assets.TEXTURE_SHIP_SIDE), game.player(), button);
+            if (location == game().player().location()) {
+                m_location = new Label(location.name(), skin);
+                m_current_location = button;
+                m_current_location.setVisible(false);
             }
         }
 
-        for (Seaway seaway : world.seaways()) {
+        for (Seaway seaway : game().world().seaways()) {
             m_seaways.add(new SeawaySprite(sprite, seaway));
         }
 
-        stage().addActor(m_ship);
+        Table table = new Table();
+        table.setFillParent(true);
+        table.top().left();
+        hud().addActor(table);
 
-        final TextButton back_button = new TextButton("< Back", style);
+        TextButton back_button = new TextButton("< Back", style);
         back_button.getLabelCell().pad(10);
         back_button.addListener(new ChangeListener()
         {
@@ -101,8 +107,21 @@ public class WorldScreen extends GameScreen
         });
 
         table.add(back_button);
+        table.add(m_location).pad(10).padLeft(30).padRight(30);
 
-        update();
+        TextButton quest_button = new TextButton("Select quests", style);
+        quest_button.getLabelCell().pad(10);
+        quest_button.addListener(new ChangeListener()
+        {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                push(Screen.Event.QUEST);
+            }
+        });
+
+        table.add(quest_button);
+
     }
 
     @Override
@@ -133,8 +152,8 @@ public class WorldScreen extends GameScreen
 
         Camera camera = stage().getCamera();
 
-        for (LocationButton button : m_locations) {
-            Vector3 v = camera.project(new Vector3(button.m_location.position(), 0));
+        for (DataButton<Location> button : m_locations) {
+            Vector3 v = camera.project(new Vector3(button.data().position(), 0));
             button.setPosition(v.x, v.y, Align.center);
         }
 
@@ -143,18 +162,23 @@ public class WorldScreen extends GameScreen
             Vector3 ve = new Vector3(sprite.m_seaway.end().position(), 0);
             Vector3 v = ve.cpy().sub(vs);
 
-            sprite.setScale(v.len() / sprite.getWidth() * 0.8f, 3);
-            sprite.setRotation(MathUtils.atan2(v.y, v.x) * 180 / MathUtils.PI);
+            sprite.setScale(v.len() / sprite.getWidth(), 3);
         }
+    }
+
+    @Override
+    public void resume()
+    {
+        super.resume();
+        update();
     }
 
     private void update()
     {
-        ArrayList<Location> locations = m_world.range(m_ship.m_player.location());
-
-        for (LocationButton button : m_locations) {
+        ArrayList<Location> locations = game().world().range(m_current_location.data());
+        for (DataButton<Location> button : m_locations) {
             for (Location location : locations) {
-                if (button.m_location == location) {
+                if (button.data() == location) {
                     button.setTouchable(Touchable.enabled);
                     break;
                 } else {
@@ -162,23 +186,8 @@ public class WorldScreen extends GameScreen
                 }
             }
         }
-    }
 
-    private class LocationButton extends TextButton
-    {
-        private Location m_location;
-
-        public LocationButton(Location location, TextButtonStyle style)
-        {
-            super(location.name(), style);
-            m_location = location;
-        }
-
-        public LocationButton(Location location, Skin skin)
-        {
-            super(location.name(), skin);
-            m_location = location;
-        }
+        m_ship.setPosition(m_current_location.data().position().x - m_ship.getWidth() / 2, m_current_location.data().position().y - m_ship.getHeight() / 2);
     }
 
     private class SeawaySprite extends Sprite
@@ -190,41 +199,11 @@ public class WorldScreen extends GameScreen
             super(sprite);
             m_seaway = seaway;
 
-            Vector2 v = seaway.start().position().cpy().add(seaway.end().position()).scl(0.5f);
-            setPosition(v.x, v.y);
-        }
-    }
+            Vector2 pos = seaway.start().position().cpy().add(seaway.end().position()).scl(0.5f);
+            setPosition(pos.x, pos.y);
 
-    private class ShipImage extends Image
-    {
-        private Player m_player;
-        private LocationButton m_button;
-
-        public ShipImage(Texture texture, Player player, LocationButton button)
-        {
-            super(texture);
-            m_player = player;
-            m_button = button;
-            m_button.setVisible(false);
-
-            setScale(0.05f);
-            update();
-        }
-
-        public void move(LocationButton button)
-        {
-            m_button.setVisible(true);
-            m_button = button;
-            m_button.setVisible(false);
-
-            m_player.move(button.m_location);
-
-            update();
-        }
-
-        public void update()
-        {
-            setPosition(m_player.location().position().x - getWidth() * getScaleX() / 2, m_player.location().position().y - getHeight() * getScaleY() / 2);
+            Vector2 dir = seaway.end().position().cpy().sub(seaway.start().position());
+            setRotation(MathUtils.atan2(dir.y, dir.x) * 180 / MathUtils.PI);
         }
     }
 }

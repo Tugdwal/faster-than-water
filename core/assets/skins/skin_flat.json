@@ -35,7 +35,7 @@
 
     checked: dark-red,
     checkedOver: red
-    disabled: gray,
+    disabled: dark-gray,
     selection: dark-red,
     
     font: white
@@ -43,7 +43,7 @@
     fontDown: white
     fontChecked: blue,
     fontCheckedOver: blue,
-    fontDisabled: gray
+    fontDisabled: white
   },
   com.badlogic.gdx.scenes.scene2d.ui.Skin$TintedDrawable: {
     buttonUp: { name: square, color: up },
@@ -135,6 +135,8 @@
   },
   com.badlogic.gdx.scenes.scene2d.ui.Label$LabelStyle: {
     default: { font: default, fontColor: font },
+    default-small: { font: default-small, fontColor: font },
+    default-large: { font: default-large, fontColor: font },
     white: { font: default, fontColor: white }
   },
   com.badlogic.gdx.scenes.scene2d.ui.List$ListStyle: {

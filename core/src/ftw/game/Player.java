@@ -1,6 +1,7 @@
 package ftw.game;
 
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import ftw.game.quest.Quest;
 import ftw.game.ship.Ship;
@@ -8,29 +9,42 @@ import ftw.game.world.Location;
 
 public class Player
 {
-    private Ship m_ship;
     private int m_money;
 
+    private Ship m_ship;
     private Location m_location;
 
-    private ArrayList<Quest> m_quests;
+    private Set<Quest> m_quests;
 
     {
         m_money = 0;
-        m_quests = new ArrayList<>();
+        m_quests = new HashSet<>();
     }
 
     public Player(Ship ship, Location location)
     {
         m_ship = ship;
         m_location = location;
+    }
 
-        select(m_location.quests().iterator().next());
+    public int money()
+    {
+        return m_money;
+    }
+
+    public Ship ship()
+    {
+        return m_ship;
     }
 
     public Location location()
     {
         return m_location;
+    }
+
+    public Set<Quest> quests()
+    {
+        return m_quests;
     }
 
     public void move(Location location)
@@ -47,11 +61,6 @@ public class Player
     {
         m_quests.add(quest);
         m_ship.load(quest.cargo());
-    }
-    
-    public Ship ship() 
-    { 
-    	return m_ship; 
     }
 
     @Override
