@@ -44,12 +44,14 @@ public class Ship extends Entity
         return this;
     }
     
-    public void damage (int damage) 
+    public int damage (int damage) 
     {
     	damage -= stat(Stat.Type.Defense).value();
     	int health = stat(Stat.Type.Health).value();
     	if (damage > 0)
     		stat(Stat.Type.Health).value(health - damage);
+    	
+    	return stat(Stat.Type.Health).value();
     }
 
     public Stat defense()

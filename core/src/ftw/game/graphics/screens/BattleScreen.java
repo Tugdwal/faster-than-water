@@ -1,17 +1,13 @@
 package ftw.game.graphics.screens;
 
-import java.awt.Point;
 import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ai.btree.Task;
-import com.badlogic.gdx.ai.btree.leaf.Wait;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -62,7 +58,6 @@ public class BattleScreen extends GameScreen {
         Skin skin = game.assets().get(Assets.SKIN_DEFAULT);
         m_background_color = skin.getColor("background-reversed");
         TextButtonStyle style = skin.get("default-reversed", TextButtonStyle.class);
-        Sprite sprite = skin.getSprite("square");
 
         Table table = new Table();
         table.setFillParent(true);
@@ -282,14 +277,6 @@ public class BattleScreen extends GameScreen {
         super.render(delta);
     }
 
-    @Override
-    public void resize(int width, int height)
-    {
-        super.resize(width, height);
-
-        Camera camera = stage().getCamera();
-    }
-
     private void updateHUD()
     {
         m_LifeAttributs.setText(String.valueOf(m_PlayerShip.health().value()));
@@ -492,7 +479,7 @@ public class BattleScreen extends GameScreen {
 	        	for (ShipImage ship : m_EnemyShips)
 	        	{
 	        		float distance = (float) Math.sqrt((double)((m_Position.x-ship.m_Position.x)*(m_Position.x-ship.m_Position.x) + (m_Position.y-ship.m_Position.y)*(m_Position.y-ship.m_Position.y)));
-	        		if (distance < 150)
+	        		if (distance < 200)
 	        		{
 	        			toShoot = ship;
 	        		}	        			
@@ -517,10 +504,33 @@ public class BattleScreen extends GameScreen {
         
         public void takeDamage () 
         {
-        	System.out.println("Get shot, have : " + m_Ship.health());
-        	m_Ship.damage(300);
-        	System.out.println("then have : " + m_Ship.health());
+        	if (m_Ship.damage(300) < 0)
+        	{
+        		destroy();
+        	}
+
         	update();
+        }
+        
+        public void destroy ()
+        {
+        	if (m_player != null)
+        	{
+        		//TODO set loose screen
+        		
+        	}
+        	else
+        	{
+        		if (m_EnemyShips.contains(this))
+        		{
+        			System.out.println("il est dans la machin");
+        			m_EnemyShips.remove(this);
+        			this.remove();
+        		}
+        		
+        		m_BattleManager.checkEndBattle();
+        	}
+        	
         }
 
         public void update()
@@ -603,6 +613,15 @@ public class BattleScreen extends GameScreen {
     			enemyIA.runTurn();
     		}
     	}
+    	
+    	public void checkEndBattle()
+    	{
+    		if (m_EnemyShips.isEmpty())
+    		{
+    			//TODO: go to win screen
+    			pop ();
+    		}
+    	}
     }
     
     private class EnemyPlayer
@@ -648,4 +667,5 @@ public class BattleScreen extends GameScreen {
     		}, (float)m_EnemyShips.size());
     	}
     }
+    
 }
