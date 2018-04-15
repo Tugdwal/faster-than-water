@@ -39,6 +39,11 @@ public class Stat
         return (int) (m_base_value * (1.0 + m_multiplier / 100.0));
     }
 
+    public void value(int value)
+    {
+        m_base_value = value;
+    }
+
     public void add(Stat stat)
     {
         if (m_type == stat.m_type) {

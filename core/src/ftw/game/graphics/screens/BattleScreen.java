@@ -1,8 +1,11 @@
 package ftw.game.graphics.screens;
 
+import java.awt.Point;
 import java.util.ArrayList;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ai.btree.Task;
+import com.badlogic.gdx.ai.btree.leaf.Wait;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
@@ -12,6 +15,7 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.Touchable;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -19,6 +23,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.utils.Timer;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 import ftw.game.FTWGame;
@@ -32,14 +37,16 @@ public class BattleScreen extends GameScreen {
 	Color m_background_color;
 	
 	private ArrayList<ActionButton> m_HUDButtons;
+	private ArrayList<ShipImage> m_EnemyShips;
 
+	private BattleManager m_BattleManager;
     private ShipImage m_ship;
     private Ship m_PlayerShip;
 
     private Label m_LifeAttributs;
-    private Label m_DefenseAttributs;
+    private Label m_FirePointsAttributs;
     private Label m_SpeedAttributs;
-    private Label m_SteeringAttributs;
+    private Label m_MovePointsAttributs;
     
     {
     	m_HUDButtons = new ArrayList<>();
@@ -50,6 +57,7 @@ public class BattleScreen extends GameScreen {
         super(game, batch, hud_viewport, game_viewport);
         
         m_PlayerShip = game().player().ship();
+        m_EnemyShips = new ArrayList<> ();
 
         Skin skin = game.assets().get(Assets.SKIN_DEFAULT);
         m_background_color = skin.getColor("background-reversed");
@@ -67,13 +75,56 @@ public class BattleScreen extends GameScreen {
     
     private void HUDInit (Table table, Skin skin, TextButtonStyle style) 
     {
-        ActionButton button = new ActionButton ("Shoot", style);
+        
+        final ActionButton back_button = new ActionButton("Retreat !", style);
+        back_button.getLabelCell().pad(10);
+        back_button.addListener(new ChangeListener()
+        {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                pop();
+            }
+        });
+        m_HUDButtons.add(back_button);
+        table.add(back_button).padRight(20);
+        
+        /*ActionButton button = new ActionButton ("Fire on\nPort Side", style);
         button.addListener(new ChangeListener()
         {
             @Override
             public void changed(ChangeEvent event, Actor actor)
             {
-                System.out.println("Shoot");
+                System.out.println("FireLeft");
+                m_ship.portSideFire ();
+            }
+        });
+        hud().addActor(button);
+        m_HUDButtons.add(button);
+        table.add(button).padRight(15);
+        
+        button = new ActionButton ("Fire on\nStarBoard Side", style);
+        button.addListener(new ChangeListener()
+        {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                System.out.println("FireRight");
+                m_ship.startboardSideFire();
+            }
+        });
+        hud().addActor(button);
+        m_HUDButtons.add(button);
+        table.add(button).padRight(150);*/
+        
+        ActionButton button = new ActionButton ("Fire !", style);
+        button.addListener(new ChangeListener()
+        {
+            @Override
+            public void changed(ChangeEvent event, Actor actor)
+            {
+                System.out.println("Fire !");
+                m_ship.shoot();
             }
         });
         hud().addActor(button);
@@ -89,20 +140,20 @@ public class BattleScreen extends GameScreen {
         tableAttributs.add(lifeLabel);
         tableAttributs.add(m_LifeAttributs);
         tableAttributs.row();
-        Label defenseLabel = new Label ("Defense: ", skin);
-        m_DefenseAttributs = new Label (String.valueOf(m_PlayerShip.defense().value()), skin);
-        tableAttributs.add(defenseLabel);
-        tableAttributs.add(m_DefenseAttributs);
-        tableAttributs.row();
         Label speedLabel = new Label ("Speed: ", skin);
         m_SpeedAttributs = new Label (String.valueOf(m_PlayerShip.speed().value()), skin);
         tableAttributs.add(speedLabel);
         tableAttributs.add(m_SpeedAttributs);
         tableAttributs.row();
-        Label steeringLabel = new Label ("Steering: ", skin);
-        m_SteeringAttributs = new Label (String.valueOf(m_PlayerShip.steering().value()), skin);
-        tableAttributs.add(steeringLabel);
-        tableAttributs.add(m_SteeringAttributs);
+        Label movePtLabel = new Label ("Moves: ", skin);
+        m_MovePointsAttributs = new Label ("0", skin);
+        tableAttributs.add(movePtLabel);
+        tableAttributs.add(m_MovePointsAttributs);
+        tableAttributs.row();
+        Label firePtLabel = new Label ("Shoots: ", skin);
+        m_FirePointsAttributs = new Label ("0", skin);
+        tableAttributs.add(firePtLabel);
+        tableAttributs.add(m_FirePointsAttributs);
         
         table.add(tableAttributs).padRight(150);
         
@@ -165,30 +216,53 @@ public class BattleScreen extends GameScreen {
         });
         hud().addActor(button);
         m_HUDButtons.add(button);
-        table.add(button).padRight(100);;
+        table.add(button).padRight(100);
         
-        final TextButton back_button = new TextButton("< Back", style);
-        back_button.getLabelCell().pad(10);
-        back_button.addListener(new ChangeListener()
+        final ActionButton nextTurnButton = new ActionButton("End Turn", style);
+        nextTurnButton.getLabelCell().pad(10);
+        nextTurnButton.addListener(new ChangeListener()
         {
             @Override
             public void changed(ChangeEvent event, Actor actor)
             {
-                pop();
+            	m_BattleManager.ChangeTurn();
             }
         });
-        table.add(back_button).padRight(20);;
+        m_HUDButtons.add(nextTurnButton);
+        table.add(nextTurnButton).padRight(20);
     }
    
     @Override
     public void resume() {
     	super.resume();
     	
+    	m_EnemyShips.clear();
     	stage().clear();
+    	
+    	m_BattleManager = new BattleManager();
+    	
         m_ship = new ShipImage(game().assets().get(Assets.TEXTURE_SHIP_SIDE), game().player(), m_PlayerShip);
         stage().addActor(m_ship);
+        
+        int nbEnemies = MathUtils.random(1, 3);
+        for (int i = 0 ; i < nbEnemies ; i++)
+        {
+        	Ship enemyShip = new Ship ("enemy", new CrewMember ("Roger"), 10)
+        			.health	(MathUtils.random(100, 1000))
+					.defense(MathUtils.random(100))
+					.speed	(MathUtils.random(100))
+					.steering(MathUtils.random(100));
 
-        update();
+        	Vector2 position = new Vector2 (MathUtils.random(2000), MathUtils.random(1000));
+        	int direction = MathUtils.random(8);
+        	ShipImage enemyShipImage = new ShipImage (game().assets().get(Assets.TEXTURE_SHIP_SIDE), null, enemyShip, position, direction);
+        	
+        	m_EnemyShips.add(enemyShipImage);
+        	stage().addActor(enemyShipImage);
+        }
+
+        m_ship.update();
+        updateHUD();
     }
 
     @Override
@@ -214,30 +288,29 @@ public class BattleScreen extends GameScreen {
         super.resize(width, height);
 
         Camera camera = stage().getCamera();
-
-        /*for (ActionButton button : m_HUDButtons) {
-            Vector3 v = camera.project(new Vector3(button.m_location.position(), 0));
-            button.setPosition(v.x, v.y, Align.center);
-        }*/
-
-        /*for (SeawaySprite sprite : m_seaways) {
-            Vector3 vs = new Vector3(sprite.m_seaway.start().position(), 0);
-            Vector3 ve = new Vector3(sprite.m_seaway.end().position(), 0);
-            Vector3 v = ve.cpy().sub(vs);
-
-            sprite.setScale(v.len() / sprite.getWidth() * 0.8f, 3);
-            sprite.setRotation(MathUtils.atan2(v.y, v.x) * 180 / MathUtils.PI);
-        }*/
     }
 
-    private void update()
+    private void updateHUD()
     {
         m_LifeAttributs.setText(String.valueOf(m_PlayerShip.health().value()));
-        m_DefenseAttributs.setText(String.valueOf(m_PlayerShip.defense().value()));
         m_SpeedAttributs.setText(String.valueOf(m_PlayerShip.speed().value()));
-        m_SteeringAttributs.setText(String.valueOf(m_PlayerShip.steering().value()));
+        m_MovePointsAttributs.setText(String.valueOf(m_ship.movePoints()));
+        m_FirePointsAttributs.setText(String.valueOf(m_ship.firePoints()));
     }
-
+    
+    private void activateButtons ()
+    {
+    	for (ActionButton button : m_HUDButtons)
+    		button.setTouchable(Touchable.enabled);
+        
+    }
+    
+    private void deactivateButtons ()
+    {
+    	for (ActionButton button : m_HUDButtons)
+    		button.setTouchable(Touchable.disabled);
+    }
+    
     private class ActionButton extends TextButton
     {
         public ActionButton(String name, TextButtonStyle style)
@@ -259,7 +332,16 @@ public class BattleScreen extends GameScreen {
         private Ship m_Ship;
         private Vector2 m_Position;
         private Vector2 m_Direction;
+        
+        private int m_MovePoints;
+        private int m_FirePoints;
 
+        {
+            m_Direction = new Vector2 (1f, 0f);
+            m_MovePoints = 5;
+            m_FirePoints = 1;
+        }
+        
         public ShipImage(Texture texture, Player player, Ship ship)
         {
             super(texture);
@@ -272,11 +354,10 @@ public class BattleScreen extends GameScreen {
             m_Position = new Vector2 ();
             m_Position.x = stage().getWidth() / 2;
             m_Position.y = stage().getHeight() / 2;
-            m_Direction = new Vector2 (1f, 0f);
-            update();
+            //update();
         }
 
-        public ShipImage(Texture texture, Player player, Ship ship, Vector2 position, Vector2 direction)
+        public ShipImage(Texture texture, Player player, Ship ship, Vector2 position, int direction)
         {
             super(texture);
             m_player = player;
@@ -286,12 +367,24 @@ public class BattleScreen extends GameScreen {
             setOrigin (getWidth()/2, getHeight()/2);
             
             m_Position = position;
-            m_Direction = direction;
+        	rotateBy(direction * rotationAngle);
+        	m_Direction.x = (float)MathUtils.cosDeg(getRotation());
+        	m_Direction.y = (float)MathUtils.sinDeg(getRotation());
             update();
         }
         
-        public void forwardMove() 
+        public void refuelActionPoints () {
+        	m_MovePoints = 5;
+        	m_FirePoints = 1;
+        	updateHUD();
+        }
+        
+        public void forwardMove()
         {
+        	if (!canMove())
+        		return;
+        	
+        	useMovePoint ();
         	m_Position.x += m_Direction.x*m_Ship.speed().value();
         	m_Position.y += m_Direction.y*m_Ship.speed().value();
         	update();
@@ -299,6 +392,10 @@ public class BattleScreen extends GameScreen {
 
         public void backwardMove()
         {
+        	if (!canMove())
+        		return;
+
+        	useMovePoint ();
         	m_Position.x -= m_Direction.x*m_Ship.speed().value(); 
         	m_Position.y -= m_Direction.y*m_Ship.speed().value();
             update();
@@ -306,6 +403,10 @@ public class BattleScreen extends GameScreen {
 
         public void leftRotate()
         {
+        	if (!canMove())
+        		return;
+
+        	useMovePoint ();
         	rotateBy(rotationAngle);
         	m_Direction.x = (float)MathUtils.cosDeg(getRotation());
         	m_Direction.y = (float)MathUtils.sinDeg(getRotation());
@@ -314,10 +415,111 @@ public class BattleScreen extends GameScreen {
         
         public void rightRotate()
         {
+        	if (!canMove())
+        		return;
+
+        	useMovePoint ();
         	rotateBy(-rotationAngle);
         	m_Direction.x = (float)MathUtils.cosDeg(getRotation());
         	m_Direction.y = (float)MathUtils.sinDeg(getRotation());
         	System.out.println(String.valueOf(m_Direction.x) + " | " + String.valueOf(m_Direction.y));
+        	update();
+        }
+        
+        public void portSideFire ()
+        {
+        	shoot (45);
+        }
+        
+        public void startboardSideFire ()
+        {
+        	shoot (-45);
+        }
+
+        public void shoot (int angle) 
+        {
+        	if (!canShoot())
+        		return;
+
+        	if (m_BattleManager.isPlayerTurn)
+        	{
+        		ShipImage toShoot = null;
+	        	for (ShipImage ship : m_EnemyShips)
+	        	{
+	        		float distance = (float) Math.sqrt((double)((m_Position.x-ship.m_Position.x)*(m_Position.x-ship.m_Position.x) + (m_Position.y-ship.m_Position.y)*(m_Position.y-ship.m_Position.y)));
+	        		if (distance < 100)
+	        		{
+		        		float diffAngle = (float) Math.acos(m_ship.m_Direction.dot(ship.m_Position));
+		        		if(diffAngle > angle - 10 && diffAngle > angle + 10)
+		        		{
+		        			toShoot = ship;
+		        		}
+	        		}	        			
+	        	}
+        		
+        		if (toShoot != null)
+        		{
+        			useFirePoint ();
+        			toShoot.takeDamage ();
+        		}
+        	}
+        	else
+        	{
+        		float distance = (float) Math.sqrt((double)((m_Position.x-m_ship.m_Position.x)*(m_Position.x-m_ship.m_Position.x) + (m_Position.y-m_ship.m_Position.y)*(m_Position.y-m_ship.m_Position.y)));
+        		if (distance < 100)
+        		{
+	        		float diffAngle = (float) Math.acos(m_ship.m_Direction.dot(m_ship.m_Position));
+	        		if(diffAngle > angle - 10 && diffAngle > angle + 10)
+	        		{
+	        			useFirePoint ();
+	        			m_ship.takeDamage ();
+	        		}
+        		}
+        	}
+        }
+        
+        /** Use to shoot on enemy ship without taking care of the shooting angle 
+         * 
+         */
+        public void shoot () 
+        {
+        	if (!canShoot())
+        		return;
+
+        	if (m_BattleManager.isPlayerTurn)
+        	{
+        		ShipImage toShoot = null;
+	        	for (ShipImage ship : m_EnemyShips)
+	        	{
+	        		float distance = (float) Math.sqrt((double)((m_Position.x-ship.m_Position.x)*(m_Position.x-ship.m_Position.x) + (m_Position.y-ship.m_Position.y)*(m_Position.y-ship.m_Position.y)));
+	        		if (distance < 150)
+	        		{
+	        			toShoot = ship;
+	        		}	        			
+	        	}
+        		
+        		if (toShoot != null)
+        		{
+        			useFirePoint ();
+        			toShoot.takeDamage ();
+        		}
+        	}
+        	else
+        	{
+        		float distance = (float) Math.sqrt((double)((m_Position.x-m_ship.m_Position.x)*(m_Position.x-m_ship.m_Position.x) + (m_Position.y-m_ship.m_Position.y)*(m_Position.y-m_ship.m_Position.y)));
+        		if (distance < 150)
+        		{
+        			useFirePoint ();
+        			m_ship.takeDamage ();
+        		}
+        	}
+        }
+        
+        public void takeDamage () 
+        {
+        	System.out.println("Get shot, have : " + m_Ship.health());
+        	m_Ship.damage(300);
+        	System.out.println("then have : " + m_Ship.health());
         	update();
         }
 
@@ -325,6 +527,7 @@ public class BattleScreen extends GameScreen {
         {
         	checkShipPosition ();        	
             setPosition(m_Position.x - getWidth() * getScaleX() / 2, m_Position.y - getHeight() * getScaleY() / 2);
+            updateHUD();
         }
         
         public void checkShipPosition ()
@@ -340,5 +543,109 @@ public class BattleScreen extends GameScreen {
         	else if (m_Position.y > stage().getHeight() - sizeShip)
         		m_Position.y = stage().getHeight() - sizeShip;
         }
+        
+        public boolean canMove ()
+        {
+        	if (m_MovePoints > 0)
+        		return true;
+        	
+        	return false;
+        }
+        
+        public void useMovePoint () {
+        	m_MovePoints--;
+        }
+        
+        public boolean canShoot ()
+        {
+        	if (m_FirePoints > 0)
+        		return true;
+        	
+        	return false;
+        }
+        
+        public void useFirePoint () {
+        	m_FirePoints--;
+        }
+        
+        public int movePoints()
+        {
+        	return m_MovePoints;
+        }
+        
+        public int firePoints()
+        {
+        	return m_FirePoints;
+        }
+    }
+    
+    private class BattleManager 
+    {
+    	private boolean isPlayerTurn;
+    	private EnemyPlayer enemyIA;
+    	{
+    		isPlayerTurn = true;
+    		enemyIA = new EnemyPlayer ();
+    	}
+    	
+    	public void ChangeTurn () 
+    	{
+    		isPlayerTurn = !isPlayerTurn;
+    		if (isPlayerTurn) 
+    		{
+    			activateButtons();
+    			m_ship.refuelActionPoints();
+    		}
+    		else
+    		{
+    			deactivateButtons();
+    			enemyIA.refuelActionPoints();
+    			enemyIA.runTurn();
+    		}
+    	}
+    }
+    
+    private class EnemyPlayer
+    {    	
+    	public void refuelActionPoints() 
+    	{
+    		for (ShipImage ship : m_EnemyShips)
+    			ship.refuelActionPoints();
+    	}
+    	
+    	public void runTurn ()
+    	{
+    		int k = 0;
+    		for (final ShipImage ship : m_EnemyShips)
+    		{
+    			Timer.schedule(new Timer.Task(){
+				    @Override
+				    public void run() {
+		    			for(int i = 0 ; i < ship.m_MovePoints ; i++)
+		    			{
+		    				int ran = MathUtils.random(100);
+		    				if (ran < 25)
+		    					ship.forwardMove();
+		    				if (ran < 45)
+		    					ship.forwardMove();
+		    				else if (ran < 65)
+		    					ship.leftRotate();
+		    				else if (ran < 85)
+		    					ship.rightRotate();
+	
+		    				ship.shoot();
+    				    }
+	    			}
+    			}, k);
+    			
+    			k++;
+    		}
+    		Timer.schedule(new Timer.Task(){
+			    @Override
+			    public void run() {
+			    	m_BattleManager.ChangeTurn();
+			    }
+    		}, (float)m_EnemyShips.size());
+    	}
     }
 }

@@ -38,9 +38,29 @@ public class Ship extends Entity
         return stat(Stat.Type.Health);
     }
 
+    public Ship health(int health)
+    {
+    	m_stats.put(Stat.Type.Health, new Stat(Stat.Type.Health, health));
+        return this;
+    }
+    
+    public void damage (int damage) 
+    {
+    	damage -= stat(Stat.Type.Defense).value();
+    	int health = stat(Stat.Type.Health).value();
+    	if (damage > 0)
+    		stat(Stat.Type.Health).value(health - damage);
+    }
+
     public Stat defense()
     {
         return stat(Stat.Type.Defense);
+    }
+
+    public Ship defense(int defense)
+    {
+    	m_stats.put(Stat.Type.Defense, new Stat(Stat.Type.Defense, defense));
+        return this;
     }
 
     public Stat speed()
@@ -48,9 +68,21 @@ public class Ship extends Entity
         return stat(Stat.Type.Speed);
     }
 
+    public Ship speed(int speed)
+    {
+    	m_stats.put(Stat.Type.Speed, new Stat(Stat.Type.Speed, speed));
+        return this;
+    }
+
     public Stat steering()
     {
         return stat(Stat.Type.Steering);
+    }
+
+    public Ship steering(int steering)
+    {
+    	m_stats.put(Stat.Type.Steering, new Stat(Stat.Type.Steering, steering));
+        return this;
     }
 
     @Override
