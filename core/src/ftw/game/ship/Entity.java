@@ -33,17 +33,12 @@ public class Entity
         return m_stats.get(type);
     }
 
-    public boolean equipable(Item item)
-    {
-        return true;
-    }
-
     protected Entity equip(Item item)
     {
-        m_inventory.add(item);
-
-        for (Stat stat : m_stats.values()) {
-            stat.add(item.stat());
+        if (m_inventory.add(item)) {
+            for (Stat stat : m_stats.values()) {
+                stat.add(item.stat());
+            }
         }
 
         return this;

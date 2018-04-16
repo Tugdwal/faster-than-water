@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ftw.game.quest.Quest;
+import ftw.game.quest.Reward;
 import ftw.game.ship.Ship;
 import ftw.game.world.Location;
 
@@ -61,6 +62,18 @@ public class Player
     {
         m_quests.add(quest);
         m_ship.load(quest.cargo());
+    }
+
+    public void receive(Reward reward)
+    {
+        m_money += reward.money();
+    }
+
+    public void complete(Quest quest)
+    {
+        if (m_ship.unload(quest.cargo()) && m_quests.remove(quest)) {
+            receive(quest.reward());
+        }
     }
 
     @Override

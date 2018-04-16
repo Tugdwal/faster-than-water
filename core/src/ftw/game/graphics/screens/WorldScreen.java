@@ -28,6 +28,7 @@ import ftw.game.assets.Assets;
 import ftw.game.graphics.base.DataButton;
 import ftw.game.graphics.base.GameScreen;
 import ftw.game.graphics.base.Screen;
+import ftw.game.quest.Quest;
 import ftw.game.world.Location;
 import ftw.game.world.Seaway;
 
@@ -36,6 +37,7 @@ public class WorldScreen extends GameScreen
     Color m_background_color;
 
     private Label m_location;
+    private Label m_score;
     private DataButton<Location> m_current_location;
     private ArrayList<DataButton<Location>> m_locations;
     private ArrayList<SeawaySprite> m_seaways;
@@ -71,7 +73,6 @@ public class WorldScreen extends GameScreen
                     m_current_location.setVisible(false);
                     game().player().move(m_current_location.data());
                     m_location.setText(m_current_location.data().name());
-                    update();
                     push(Screen.Event.BATTLE);
                 }
             });
@@ -90,11 +91,6 @@ public class WorldScreen extends GameScreen
             m_seaways.add(new SeawaySprite(sprite, seaway));
         }
 
-        Table table = new Table();
-        table.setFillParent(true);
-        table.top().left();
-        hud().addActor(table);
-
         TextButton back_button = new TextButton("< Back", style);
         back_button.getLabelCell().pad(10);
         back_button.addListener(new ChangeListener()
@@ -106,8 +102,7 @@ public class WorldScreen extends GameScreen
             }
         });
 
-        table.add(back_button);
-        table.add(m_location).pad(10).padLeft(30).padRight(30);
+        m_score = new Label("", skin);
 
         TextButton quest_button = new TextButton("Select quests", style);
         quest_button.getLabelCell().pad(10);
@@ -120,8 +115,16 @@ public class WorldScreen extends GameScreen
             }
         });
 
-        table.add(quest_button);
+        Table table = new Table();
+        table.setFillParent(true);
+        table.top().left();
 
+        table.add(back_button);
+        table.add(m_location).pad(10).padLeft(30).padRight(30);
+        table.add(quest_button);
+        table.add(m_score).pad(10).padLeft(30).padRight(30);
+
+        hud().addActor(table);
     }
 
     @Override
@@ -188,6 +191,14 @@ public class WorldScreen extends GameScreen
         }
 
         m_ship.setPosition(m_current_location.data().position().x - m_ship.getWidth() / 2, m_current_location.data().position().y - m_ship.getHeight() / 2);
+
+        for (Quest quest : game().player().quests()) {
+            if (quest.destination() == game().player().location()) {
+                game().player().complete(quest);
+            }
+        }
+
+        m_score.setText(String.format("Score : %s", game().player().money()));
     }
 
     private class SeawaySprite extends Sprite
