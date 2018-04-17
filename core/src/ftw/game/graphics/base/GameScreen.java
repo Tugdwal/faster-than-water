@@ -28,8 +28,11 @@ public class GameScreen extends HUDScreen
     @Override
     public void render(float delta)
     {
+        clear();
+
         m_stage.act(delta);
         m_stage.draw();
+
         super.render(delta);
     }
 

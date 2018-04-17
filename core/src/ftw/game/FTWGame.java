@@ -20,7 +20,6 @@ import ftw.game.graphics.screens.BattleScreen;
 import ftw.game.graphics.screens.LoadingScreen;
 import ftw.game.graphics.screens.MainMenuScreen;
 import ftw.game.graphics.screens.QuestScreen;
-import ftw.game.graphics.screens.TestScreen;
 import ftw.game.graphics.screens.WorldScreen;
 import ftw.game.item.Item;
 import ftw.game.ship.CrewMember;
@@ -125,10 +124,15 @@ public class FTWGame extends Game
     {
         System.out.println(event);
 
+        boolean update = false;
+
+        if (event.contains(Screen.Event.EXIT)) {
+            Gdx.app.exit();
+        }
+
         if (event.contains(Screen.Event.POP) && event.remove(Screen.Event.POP)) {
             m_screens.pop();
-            setScreen(m_screens.peek());
-            getScreen().resume();
+            update = true;
         }
 
         if (event.contains(Screen.Event.PUSH) && event.remove(Screen.Event.PUSH)) {
@@ -149,18 +153,20 @@ public class FTWGame extends Game
                         case BATTLE:
                             m_loaded_screens.put(e, new BattleScreen(this, m_batch, m_hud_viewport, m_game_viewport));
                             break;
-                        case TEST:
-                            m_loaded_screens.put(e, new TestScreen(this, m_batch, m_hud_viewport));
-                            break;
                         default:
                             break;
                     }
                 }
 
                 m_screens.push(m_loaded_screens.get(e));
-                setScreen(m_screens.peek());
-                getScreen().resume();
+                update = true;
             }
+        }
+
+        if (update) {
+            m_screens.peek().init();
+            setScreen(m_screens.peek());
+            getScreen().resume();
         }
     }
 

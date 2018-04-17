@@ -1,8 +1,5 @@
 package ftw.game.graphics.screens;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -23,8 +20,6 @@ import ftw.game.quest.Quest;
 
 public class QuestScreen extends HUDScreen
 {
-    Color m_background_color;
-
     private Label m_location;
     private Label m_cargo;
     private VerticalGroup m_available;
@@ -40,7 +35,7 @@ public class QuestScreen extends HUDScreen
         super(game, batch, viewport);
 
         Skin skin = game().assets().get(Assets.SKIN_DEFAULT);
-        m_background_color = skin.getColor("background");
+        setColor(skin.getColor("background"));
 
         Table table = new Table();
         table.setFillParent(true);
@@ -82,17 +77,14 @@ public class QuestScreen extends HUDScreen
     @Override
     public void render(float delta)
     {
-        Gdx.gl.glClearColor(m_background_color.r, m_background_color.g, m_background_color.b, m_background_color.a);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+        clear();
 
         super.render(delta);
     }
 
     @Override
-    public void resume()
+    public void init()
     {
-        super.resume();
-
         m_location.setText(game().player().location().name());
 
         Skin skin = game().assets().get(Assets.SKIN_DEFAULT);

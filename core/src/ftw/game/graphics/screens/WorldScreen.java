@@ -2,18 +2,12 @@ package ftw.game.graphics.screens;
 
 import java.util.ArrayList;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -26,25 +20,28 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 import ftw.game.FTWGame;
 import ftw.game.assets.Assets;
 import ftw.game.graphics.base.DataButton;
+import ftw.game.graphics.base.DataImage;
 import ftw.game.graphics.base.GameScreen;
 import ftw.game.graphics.base.Screen;
 import ftw.game.quest.Quest;
+import ftw.game.ship.Ship;
 import ftw.game.world.Location;
 import ftw.game.world.Seaway;
 
 public class WorldScreen extends GameScreen
 {
-    Color m_background_color;
-
     private Label m_location;
     private Label m_score;
+
     private DataButton<Location> m_current_location;
+    private DataImage<Ship> m_ship;
+
     private ArrayList<DataButton<Location>> m_locations;
-    private ArrayList<SeawaySprite> m_seaways;
-    private Image m_ship;
+    private ArrayList<DataImage<Seaway>> m_seaways;
 
     {
         m_locations = new ArrayList<>();
+        m_seaways = new ArrayList<>();
         m_seaways = new ArrayList<>();
     }
 
@@ -53,13 +50,8 @@ public class WorldScreen extends GameScreen
         super(game, batch, hud_viewport, game_viewport);
 
         Skin skin = game().assets().get(Assets.SKIN_DEFAULT);
-        m_background_color = skin.getColor("background-reversed");
+        setColor(skin.getColor("background-reversed"));
         TextButtonStyle style = skin.get("default-reversed", TextButtonStyle.class);
-        Sprite sprite = skin.getSprite("square");
-
-        m_ship = new Image(game().assets().get(Assets.TEXTURE_SHIP_SIDE));
-        m_ship.setSize(80, 80);
-        stage().addActor(m_ship);
 
         for (Location location : game().world().locations()) {
             final DataButton<Location> button = new DataButton<>(location.name(), style, location);
@@ -88,8 +80,18 @@ public class WorldScreen extends GameScreen
         }
 
         for (Seaway seaway : game().world().seaways()) {
-            m_seaways.add(new SeawaySprite(sprite, seaway));
+            DataImage<Seaway> image = new DataImage<Seaway>(skin.getDrawable("square"), seaway);
+            image.setOriginY(image.getHeight() / 2);
+            image.setPosition(seaway.start().position().x, seaway.start().position().y);
+            image.setRotation(MathUtils.atan2(seaway.end().position().y - seaway.start().position().y, seaway.end().position().x - seaway.start().position().x) * 180 / MathUtils.PI);
+
+            m_seaways.add(image);
+            stage().addActor(image);
         }
+
+        m_ship = new DataImage<Ship>(game().assets().get(Assets.TEXTURE_SHIP_SIDE), game().player().ship());
+        m_ship.setSize(80, 80);
+        stage().addActor(m_ship);
 
         TextButton back_button = new TextButton("< Back", style);
         back_button.getLabelCell().pad(10);
@@ -102,8 +104,6 @@ public class WorldScreen extends GameScreen
             }
         });
 
-        m_score = new Label("", skin);
-
         TextButton quest_button = new TextButton("Select quests", style);
         quest_button.getLabelCell().pad(10);
         quest_button.addListener(new ChangeListener()
@@ -115,10 +115,11 @@ public class WorldScreen extends GameScreen
             }
         });
 
+        m_score = new Label("", skin);
+
         Table table = new Table();
         table.setFillParent(true);
         table.top().left();
-
         table.add(back_button);
         table.add(m_location).pad(10).padLeft(30).padRight(30);
         table.add(quest_button);
@@ -128,24 +129,9 @@ public class WorldScreen extends GameScreen
     }
 
     @Override
-    public void render(float delta)
+    public void init()
     {
-        Gdx.gl.glClearColor(m_background_color.r, m_background_color.g, m_background_color.b, m_background_color.a);
-        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        Batch batch = stage().getBatch();
-        Camera camera = stage().getCamera();
-
-        batch.setProjectionMatrix(camera.combined);
-        batch.begin();
-
-        for (SeawaySprite sprite : m_seaways) {
-            sprite.draw(batch);
-        }
-
-        batch.end();
-
-        super.render(delta);
+        update();
     }
 
     @Override
@@ -160,20 +146,9 @@ public class WorldScreen extends GameScreen
             button.setPosition(v.x, v.y, Align.center);
         }
 
-        for (SeawaySprite sprite : m_seaways) {
-            Vector3 vs = new Vector3(sprite.m_seaway.start().position(), 0);
-            Vector3 ve = new Vector3(sprite.m_seaway.end().position(), 0);
-            Vector3 v = ve.cpy().sub(vs);
-
-            sprite.setScale(v.len() / sprite.getWidth(), 3);
+        for (DataImage<Seaway> seaway_image : m_seaways) {
+            seaway_image.update((image, seaway) -> image.setScaleX(seaway.end().position().cpy().sub(seaway.start().position()).len() / image.getWidth()));
         }
-    }
-
-    @Override
-    public void resume()
-    {
-        super.resume();
-        update();
     }
 
     private void update()
@@ -190,7 +165,7 @@ public class WorldScreen extends GameScreen
             }
         }
 
-        m_ship.setPosition(m_current_location.data().position().x - m_ship.getWidth() / 2, m_current_location.data().position().y - m_ship.getHeight() / 2);
+        m_ship.update((image, ship) -> image.setPosition(ship.position().x - m_ship.getWidth() / 2, ship.position().y - m_ship.getHeight() / 2));
 
         for (Quest quest : game().player().quests()) {
             if (quest.destination() == game().player().location()) {
@@ -199,22 +174,5 @@ public class WorldScreen extends GameScreen
         }
 
         m_score.setText(String.format("Score : %s", game().player().money()));
-    }
-
-    private class SeawaySprite extends Sprite
-    {
-        private Seaway m_seaway;
-
-        public SeawaySprite(Sprite sprite, Seaway seaway)
-        {
-            super(sprite);
-            m_seaway = seaway;
-
-            Vector2 pos = seaway.start().position().cpy().add(seaway.end().position()).scl(0.5f);
-            setPosition(pos.x, pos.y);
-
-            Vector2 dir = seaway.end().position().cpy().sub(seaway.start().position());
-            setRotation(MathUtils.atan2(dir.y, dir.x) * 180 / MathUtils.PI);
-        }
     }
 }
