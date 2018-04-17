@@ -34,6 +34,7 @@ public class BattleScreen extends GameScreen {
 	
 	private ArrayList<ActionButton> m_HUDButtons;
 	private ArrayList<ShipImage> m_EnemyShips;
+	private ArrayList<ShipLifeLabel> m_ShipLifeLabels;
 
 	private BattleManager m_BattleManager;
     private ShipImage m_ship;
@@ -46,6 +47,8 @@ public class BattleScreen extends GameScreen {
     
     {
     	m_HUDButtons = new ArrayList<>();
+        m_EnemyShips = new ArrayList<> ();
+        m_ShipLifeLabels = new ArrayList<>();
     }
 
     public BattleScreen(FTWGame game, Batch batch, Viewport hud_viewport, Viewport game_viewport)
@@ -53,7 +56,6 @@ public class BattleScreen extends GameScreen {
         super(game, batch, hud_viewport, game_viewport);
         
         m_PlayerShip = game().player().ship();
-        m_EnemyShips = new ArrayList<> ();
 
         Skin skin = game.assets().get(Assets.SKIN_DEFAULT);
         m_background_color = skin.getColor("background-reversed");
@@ -220,7 +222,7 @@ public class BattleScreen extends GameScreen {
             @Override
             public void changed(ChangeEvent event, Actor actor)
             {
-            	m_BattleManager.ChangeTurn();
+            	m_BattleManager.changeTurn();
             }
         });
         m_HUDButtons.add(nextTurnButton);
@@ -250,10 +252,14 @@ public class BattleScreen extends GameScreen {
 
         	Vector2 position = new Vector2 (MathUtils.random(2000), MathUtils.random(1000));
         	int direction = MathUtils.random(8);
+        	
         	ShipImage enemyShipImage = new ShipImage (game().assets().get(Assets.TEXTURE_SHIP_SIDE), null, enemyShip, position, direction);
+        	ShipLifeLabel lifeLbl = new ShipLifeLabel( (enemyShipImage));
         	
         	m_EnemyShips.add(enemyShipImage);
+        	m_ShipLifeLabels.add(lifeLbl);
         	stage().addActor(enemyShipImage);
+        	stage().addActor(lifeLbl);
         }
 
         m_ship.update();
@@ -283,6 +289,26 @@ public class BattleScreen extends GameScreen {
         m_SpeedAttributs.setText(String.valueOf(m_PlayerShip.speed().value()));
         m_MovePointsAttributs.setText(String.valueOf(m_ship.movePoints()));
         m_FirePointsAttributs.setText(String.valueOf(m_ship.firePoints()));
+        
+        if (m_ShipLifeLabels.isEmpty())
+        	return;
+        
+        ArrayList<ShipLifeLabel> slis = null;
+        for (ShipLifeLabel sli : m_ShipLifeLabels)
+        {
+        	sli.update();
+        	if(sli.isDead())
+        	{
+        		if (slis == null)
+        			slis = new ArrayList<>();
+        		
+        		slis.add(sli);
+        	}
+        }
+        
+        if (slis != null)
+	        for (ShipLifeLabel sli : slis)
+	        	sli.destroy ();
     }
     
     private void activateButtons ()
@@ -341,12 +367,14 @@ public class BattleScreen extends GameScreen {
             m_Position = new Vector2 ();
             m_Position.x = stage().getWidth() / 2;
             m_Position.y = stage().getHeight() / 2;
+            
             //update();
         }
 
         public ShipImage(Texture texture, Player player, Ship ship, Vector2 position, int direction)
         {
             super(texture);
+            
             m_player = player;
             m_Ship = ship;
 
@@ -516,14 +544,13 @@ public class BattleScreen extends GameScreen {
         {
         	if (m_player != null)
         	{
-        		//TODO set loose screen
+        		Gdx.app.exit();
         		
         	}
         	else
         	{
         		if (m_EnemyShips.contains(this))
         		{
-        			System.out.println("il est dans la machin");
         			m_EnemyShips.remove(this);
         			this.remove();
         		}
@@ -532,11 +559,11 @@ public class BattleScreen extends GameScreen {
         	}
         	
         }
-
+        
         public void update()
         {
         	checkShipPosition ();        	
-            setPosition(m_Position.x - getWidth() * getScaleX() / 2, m_Position.y - getHeight() * getScaleY() / 2);
+            setPosition(m_Position.x - getWidth() / 2, m_Position.y - getHeight() / 2);
             updateHUD();
         }
         
@@ -589,6 +616,58 @@ public class BattleScreen extends GameScreen {
         }
     }
     
+    private class ShipLifeLabel extends Label {
+    	private ShipImage m_ShipImage;
+    	private int m_MaxHealth;
+    	private boolean m_IsDead;
+    	
+    	{
+    		m_IsDead = false;
+    	}
+    	
+    	public ShipLifeLabel (ShipImage shipImage) 
+    	{
+    		super ("100 / 100", game().assets().get(Assets.SKIN_DEFAULT).get("default-small", LabelStyle.class));
+    		
+    		m_ShipImage = shipImage;
+    		m_MaxHealth = m_ShipImage.m_Ship.health().value();
+    		
+    		setColor (1, 0, 0, 1);
+    		
+    		update();
+    	}
+    	
+    	public void update()
+    	{
+    		int life = m_ShipImage.m_Ship.health().value();
+    		
+    		if (life <= 0) 
+    			return;
+    		
+    		setText(life + " / " + m_MaxHealth);
+    		
+    		Vector2 position = m_ShipImage.m_Position.cpy();
+    		position.y -= m_ShipImage.getHeight()/2;
+    		position.y -= getHeight()/2;
+
+            setPosition(position.x - getWidth() * getScaleX() / 2, position.y - getHeight() * getScaleY() / 2);
+    	}
+
+    	public void destroy ()
+    	{
+			if (m_ShipLifeLabels.contains(this))
+			{
+				m_ShipLifeLabels.remove(this);
+			}
+			this.remove();
+    	}
+    	
+    	public boolean isDead()
+    	{
+    		return m_IsDead;
+    	}
+    }
+    
     private class BattleManager 
     {
     	private boolean isPlayerTurn;
@@ -598,7 +677,7 @@ public class BattleScreen extends GameScreen {
     		enemyIA = new EnemyPlayer ();
     	}
     	
-    	public void ChangeTurn () 
+    	public void changeTurn () 
     	{
     		isPlayerTurn = !isPlayerTurn;
     		if (isPlayerTurn) 
@@ -618,7 +697,6 @@ public class BattleScreen extends GameScreen {
     	{
     		if (m_EnemyShips.isEmpty())
     		{
-    			//TODO: go to win screen
     			pop ();
     		}
     	}
@@ -645,8 +723,8 @@ public class BattleScreen extends GameScreen {
 		    				int ran = MathUtils.random(100);
 		    				if (ran < 25)
 		    					ship.forwardMove();
-		    				if (ran < 45)
-		    					ship.forwardMove();
+		    				else if (ran < 45)
+		    					ship.backwardMove();		    				
 		    				else if (ran < 65)
 		    					ship.leftRotate();
 		    				else if (ran < 85)
@@ -662,7 +740,7 @@ public class BattleScreen extends GameScreen {
     		Timer.schedule(new Timer.Task(){
 			    @Override
 			    public void run() {
-			    	m_BattleManager.ChangeTurn();
+			    	m_BattleManager.changeTurn();
 			    }
     		}, (float)m_EnemyShips.size());
     	}
