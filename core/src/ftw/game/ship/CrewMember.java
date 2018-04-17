@@ -29,7 +29,6 @@ public class CrewMember extends Entity
         return stat(Stat.Type.Damage);
     }
 
-    @Override
     public boolean equipable(Item item)
     {
         return item.type() == Item.Type.Sword;

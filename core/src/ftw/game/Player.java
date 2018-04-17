@@ -13,7 +13,6 @@ public class Player
     private int m_money;
 
     private Ship m_ship;
-    private Location m_location;
 
     private Set<Quest> m_quests;
 
@@ -24,8 +23,7 @@ public class Player
 
     public Player(Ship ship, Location location)
     {
-        m_ship = ship;
-        m_location = location;
+        m_ship = ship.move(location);
     }
 
     public int money()
@@ -40,7 +38,7 @@ public class Player
 
     public Location location()
     {
-        return m_location;
+        return m_ship.location();
     }
 
     public Set<Quest> quests()
@@ -48,9 +46,9 @@ public class Player
         return m_quests;
     }
 
-    public void move(Location location)
+    public Ship move(Location location)
     {
-        m_location = location;
+        return m_ship.move(location);
     }
 
     public boolean selectable(Quest quest)
@@ -79,6 +77,6 @@ public class Player
     @Override
     public String toString()
     {
-        return String.format("Player [%n  Money [%s],%n  %s,%n  %s,%n  %s%n]", m_money, m_ship, m_location, m_quests);
+        return String.format("Player [%n  Money [%s],%n  %s,%n  %s%n]", m_money, m_ship, m_quests);
     }
 }

@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.badlogic.gdx.math.Vector2;
+
 import ftw.game.item.Item;
 import ftw.game.quest.Cargo;
 import ftw.game.stat.Stat;
+import ftw.game.world.Location;
 
 public class Ship extends Entity
 {
@@ -15,6 +18,8 @@ public class Ship extends Entity
 
     private int m_cargo_space;
     private Set<Cargo> m_cargo;
+
+    private Location m_location;
 
     {
         m_crew = new ArrayList<>();
@@ -32,6 +37,13 @@ public class Ship extends Entity
 
         m_captain = captain;
         m_cargo_space = hold_size;
+    }
+
+    public Ship(String name, CrewMember captain, int hold_size, Location location)
+    {
+        this(name, captain, hold_size);
+
+        m_location = location;
     }
 
     public Stat health()
@@ -103,6 +115,16 @@ public class Ship extends Entity
         return m_cargo;
     }
 
+    public Location location()
+    {
+        return m_location;
+    }
+
+    public Vector2 position()
+    {
+        return m_location.position();
+    }
+
     public boolean equipable(Item item)
     {
         return false;
@@ -159,9 +181,15 @@ public class Ship extends Entity
         return m_cargo.remove(cargo);
     }
 
+    public Ship move(Location location)
+    {
+        m_location = location;
+        return this;
+    }
+
     @Override
     public String toString()
     {
-        return String.format("Ship [%s, %s, %s, %s]", super.toString(), m_captain, m_crew, m_cargo);
+        return String.format("Ship [%s, %s, %s, %s, %s]", super.toString(), m_captain, m_crew, m_cargo, m_location);
     }
 }
