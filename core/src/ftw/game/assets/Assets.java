@@ -23,6 +23,8 @@ public class Assets extends AssetManager
     private final static String FONT_BLACK_PEARL_FILE = "BlackPearl.ttf";
     private final static String SKIN_FLAT_FILE = "skin_flat.json";
     private final static String TEXTURE_SHIP_SIDE_FILE = "ship_side.png";
+    private final static String TEXTURE_SHIP_TOP_SMALL_FILE = "ship_top_small.png";
+    private final static String TEXTURE_SHIP_TOP_LARGE_FILE = "ship_top_large.png";
 
     private final static int FONT_SIZE_SMALL = 16;
     private final static int FONT_SIZE_MEDIUM = 32;
@@ -37,6 +39,8 @@ public class Assets extends AssetManager
     public final static AssetDescriptor<Skin> SKIN_DEFAULT = SKIN_FLAT;
 
     public final static AssetDescriptor<Texture> TEXTURE_SHIP_SIDE = new AssetDescriptor<>(TEXTURE_FODLER + TEXTURE_SHIP_SIDE_FILE, Texture.class);
+    public final static AssetDescriptor<Texture> TEXTURE_SHIP_TOP_SMALL = new AssetDescriptor<>(TEXTURE_FODLER + TEXTURE_SHIP_TOP_SMALL_FILE, Texture.class);
+    public final static AssetDescriptor<Texture> TEXTURE_SHIP_TOP_LARGE = new AssetDescriptor<>(TEXTURE_FODLER + TEXTURE_SHIP_TOP_LARGE_FILE, Texture.class);
 
     {
         setLogger(new Logger("Debug", Logger.DEBUG));
@@ -57,6 +61,8 @@ public class Assets extends AssetManager
     {
         load(SKIN_DEFAULT);
         load(TEXTURE_SHIP_SIDE);
+        load(TEXTURE_SHIP_TOP_SMALL);
+        load(TEXTURE_SHIP_TOP_LARGE);
 
         return this;
     }
