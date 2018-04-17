@@ -153,6 +153,8 @@ public class WorldScreen extends GameScreen
 
     private void update()
     {
+        game().world().update();
+
         ArrayList<Location> locations = game().world().range(m_current_location.data());
         for (DataButton<Location> button : m_locations) {
             for (Location location : locations) {

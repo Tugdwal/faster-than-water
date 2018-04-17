@@ -2,6 +2,8 @@ package ftw.game.world;
 
 import java.util.ArrayList;
 
+import com.badlogic.gdx.math.MathUtils;
+
 import ftw.game.quest.Quest;
 
 public class World
@@ -39,15 +41,6 @@ public class World
         m_seaways.add(new Seaway(singapore, bermuda_triangle));
         m_seaways.add(new Seaway(port_royal, bermuda_triangle));
         m_seaways.add(new Seaway(port_royal, singapore));
-
-        Quest q1 = new Quest(tortuga);
-        Quest q2 = new Quest(singapore);
-
-        m_quests.add(q1);
-        m_quests.add(q2);
-
-        port_royal.assign(q1);
-        port_royal.assign(q2);
     }
 
     public ArrayList<Location> harbors()
@@ -84,6 +77,22 @@ public class World
     public Location startingLocation()
     {
         return m_starting_location;
+    }
+
+    public void update()
+    {
+        if (m_quests.size() < 3) {
+            Location start = m_harbors.get(MathUtils.random(m_harbors.size() - 1));
+            Location destination;
+
+            do {
+                destination = m_harbors.get(MathUtils.random(m_harbors.size() - 1));
+            } while (start == destination);
+
+            Quest q = new Quest(destination);
+            start.assign(q);
+            m_quests.add(q);
+        }
     }
 
     @Override

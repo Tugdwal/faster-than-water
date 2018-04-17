@@ -218,13 +218,16 @@ public class BattleScreen extends GameScreen
     @Override
     public void init()
     {
-
         m_EnemyShips.clear();
         stage().clear();
 
         m_BattleManager = new BattleManager();
 
+        float scale = 0.4f;
+
         m_ship = new ShipImage(game().assets().get(Assets.TEXTURE_SHIP_TOP_LARGE), game().player(), m_PlayerShip);
+        m_ship.setSize(m_ship.getWidth() * scale, m_ship.getHeight() * scale);
+        m_ship.setOrigin(m_ship.getWidth() / 2, m_ship.getHeight() / 2);
         stage().addActor(m_ship);
 
         int nbEnemies = MathUtils.random(1, 3);
@@ -238,8 +241,14 @@ public class BattleScreen extends GameScreen
             Vector2 position = new Vector2(MathUtils.random(2000), MathUtils.random(1000));
             int direction = MathUtils.random(8);
 
+            scale = 0.2f;
+
             ShipImage enemyShipImage = new ShipImage(game().assets().get(Assets.TEXTURE_SHIP_TOP_SMALL), null, enemyShip, position, direction);
-            ShipLifeLabel lifeLbl = new ShipLifeLabel((enemyShipImage));
+            enemyShipImage.setSize(enemyShipImage.getWidth() * scale, enemyShipImage.getHeight() * scale);
+            enemyShipImage.setOrigin(enemyShipImage.getWidth() / 2, enemyShipImage.getHeight() / 2);
+            enemyShipImage.update();
+
+            ShipLifeLabel lifeLbl = new ShipLifeLabel(enemyShipImage);
 
             m_EnemyShips.add(enemyShipImage);
             m_ShipLifeLabels.add(lifeLbl);
@@ -281,7 +290,6 @@ public class BattleScreen extends GameScreen
     {
         for (ActionButton button : m_HUDButtons)
             button.setTouchable(Touchable.enabled);
-
     }
 
     private void deactivateButtons()
@@ -327,15 +335,9 @@ public class BattleScreen extends GameScreen
             m_player = player;
             m_Ship = ship;
 
-            float scale = 0.3f;
-            setSize(getWidth() * scale, getHeight() * scale);
-            setOrigin(getWidth() / 2, getHeight() / 2);
-
             m_Position = new Vector2();
             m_Position.x = stage().getWidth() / 2;
             m_Position.y = stage().getHeight() / 2;
-
-            // update();
         }
 
         public ShipImage(Texture texture, Player player, Ship ship, Vector2 position, int direction)
@@ -345,15 +347,10 @@ public class BattleScreen extends GameScreen
             m_player = player;
             m_Ship = ship;
 
-            float scale = 0.3f;
-            setSize(getWidth() * scale, getHeight() * scale);
-            setOrigin(getWidth() / 2, getHeight() / 2);
-
             m_Position = position;
             rotateBy(direction * rotationAngle);
             m_Direction.x = MathUtils.cosDeg(getRotation());
             m_Direction.y = MathUtils.sinDeg(getRotation());
-            update();
         }
 
         public void refuelActionPoints()
@@ -597,12 +594,7 @@ public class BattleScreen extends GameScreen
                 return;
 
             setText(life + " / " + m_MaxHealth);
-
-            Vector2 position = m_ShipImage.m_Position.cpy();
-            position.y -= m_ShipImage.getHeight() / 2;
-            position.y -= getHeight() / 2;
-
-            setPosition(position.x - getWidth() * getScaleX() / 2, position.y - getHeight() * getScaleY() / 2);
+            setPosition(m_ShipImage.m_Position.x - getWidth() * getScaleX() / 2, m_ShipImage.m_Position.y - getHeight() * getScaleY() - m_ShipImage.getHeight() / 2);
         }
 
         public void destroy()
