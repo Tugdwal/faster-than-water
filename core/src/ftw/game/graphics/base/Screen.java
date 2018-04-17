@@ -39,4 +39,9 @@ public class Screen extends ScreenAdapter
     {
         m_game.handleEvent(EnumSet.of(Event.POP, Event.PUSH, screen));
     }
+    
+    public void init ()
+    {
+    	
+    }
 }

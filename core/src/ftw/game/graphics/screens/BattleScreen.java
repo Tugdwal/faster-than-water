@@ -228,10 +228,9 @@ public class BattleScreen extends GameScreen {
         m_HUDButtons.add(nextTurnButton);
         table.add(nextTurnButton).padRight(20);
     }
-   
+    
     @Override
-    public void resume() {
-    	super.resume();
+    public void init() {
     	
     	m_EnemyShips.clear();
     	stage().clear();
